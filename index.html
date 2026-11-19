@@ -304,10 +304,10 @@
 
           <div class="flex flex-wrap items-center justify-between gap-2 w-full px-1">
             <p id="micStatusText" class="text-xs font-bold text-slate-500">
-              ※ 話し終わると自動で判定するよ！
+              ※ マイクを押して話すと自動で判定するよ！
             </p>
             <label class="inline-flex items-center gap-1.5 cursor-pointer bg-white border border-indigo-200 px-2.5 py-1 rounded-full text-[11px] font-extrabold text-indigo-700 shadow-xs select-none">
-              <input id="autoMicToggle" type="checkbox" checked onchange="onAutoMicToggleChange()" class="accent-indigo-600 w-3.5 h-3.5 rounded" />
+              <input id="autoMicToggle" type="checkbox" onchange="onAutoMicToggleChange()" class="accent-indigo-600 w-3.5 h-3.5 rounded" />
               <span>⚡ 質問のあと自動でマイクON</span>
             </label>
           </div>
@@ -1086,9 +1086,9 @@
     }
 
     // ==========================================
-    // 5. 音声認識（無音検知で自動終了＆即判定）
+    // 5. 音声認識（iPad Safari安定版：1問ごとに確実にリセット）
     // ==========================================
-    let autoMicMode = true;
+    let autoMicMode = false;
 
     function isAutoMicEnabled() {
       const el = document.getElementById('autoMicToggle');
@@ -1097,7 +1097,7 @@
 
     function onAutoMicToggleChange() {
       autoMicMode = isAutoMicEnabled();
-      showToast(autoMicMode ? '⚡ 質問のあと自動でマイクがONになります！' : 'マイクはボタンタップでONになります');
+      showToast(autoMicMode ? '⚡ 質問のあと自動でマイクがONになります' : 'マイクはボタンタップでONになります');
     }
 
     function clearMicTimers() {
@@ -1108,7 +1108,6 @@
 
     function toggleSpeechRecognition(isAutoTriggered = false) {
       if (isRecording) {
-        // 録音中に押されたら、今の内容で即判定して終了
         if (recognition) {
           try { recognition.stop(); } catch (e) {}
         }
@@ -1126,18 +1125,28 @@
       stopSpeech();
       stopRecognition();
 
+      const micBtnText = document.getElementById('micBtnText');
+      if (micBtnText) micBtnText.textContent = 'マイク準備中...';
+
+      // スピーカーからマイクへの切り替え時間を確保（iPad Safari対策）
+      autoMicDelayTimer = setTimeout(() => {
+        startRecognitionSession(SpeechRecognition, isAutoTriggered);
+      }, 250);
+    }
+
+    function startRecognitionSession(SpeechRecognition, isAutoTriggered) {
+      const micBtn = document.getElementById('micBtn');
+      const micBtnText = document.getElementById('micBtnText');
+      const micStatusText = document.getElementById('micStatusText');
+
       recognition = new SpeechRecognition();
       recognition.lang = 'en-US';
-      recognition.continuous = true;      // 2文構成でも息継ぎで切れないようにする
-      recognition.interimResults = true;  // 途中経過もリアルタイム表示
+      recognition.continuous = false;     // iPad Safariで2問目以降も安定させるためfalse
+      recognition.interimResults = true;
       recognition.maxAlternatives = 1;
 
       let fullTranscript = '';
       let hasFinalized = false;
-
-      const micBtn = document.getElementById('micBtn');
-      const micBtnText = document.getElementById('micBtnText');
-      const micStatusText = document.getElementById('micStatusText');
 
       const finalizeAndStop = () => {
         if (hasFinalized) return;
@@ -1159,13 +1168,12 @@
         micBtnText.textContent = 'ききとり中... 話してね！';
         micStatusText.textContent = '🎤 話し終わると自動で判定するよ！';
 
-        // 6秒間まったく声が聞こえなければ自動終了
         noSpeechTimer = setTimeout(() => {
           if (isRecording && !fullTranscript.trim()) {
             stopRecognition();
             micStatusText.textContent = '※ 声が聞こえませんでした。もう一度マイクを押してね';
           }
-        }, 6000);
+        }, 7000);
       };
 
       recognition.onresult = (event) => {
@@ -1179,11 +1187,10 @@
 
         if (fullTranscript) {
           micStatusText.textContent = `👂 "${fullTranscript}"`;
-          // 最後の言葉から1.6秒間、次の言葉が来なければ話し終わりとみなして自動判定
           if (silenceTimer) clearTimeout(silenceTimer);
           silenceTimer = setTimeout(() => {
             finalizeAndStop();
-          }, 1600);
+          }, 1800);
         }
       };
 
@@ -1194,7 +1201,7 @@
           evaluateSpokenResponse(fullTranscript.trim());
         } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
           if (!isAutoTriggered) {
-            showToast('マイクが許可されていません。Safariの設定を確認するか「声に出して言えた！」を使ってね');
+            showToast('マイクが許可されていません。Safariの設定を確認してね');
           } else {
             micStatusText.textContent = '🎤 マイクボタンを押してから英語を話してね！';
           }
@@ -1212,6 +1219,7 @@
           hasFinalized = true;
           evaluateSpokenResponse(fullTranscript.trim());
         }
+        recognition = null;
         resetMicButtonUI();
       };
 
@@ -1223,6 +1231,7 @@
         } else {
           micStatusText.textContent = '🎤 マイクボタンを押してから英語を話してね！';
         }
+        recognition = null;
         resetMicButtonUI();
       }
     }
@@ -1237,7 +1246,7 @@
           oldRec.onresult = null;
           oldRec.onerror = null;
           oldRec.onend = null;
-          oldRec.stop(); // iPad Safariでの詰まり防止のためabortではなくstopを使用
+          oldRec.stop();
         } catch (e) {}
       }
       resetMicButtonUI();
@@ -1252,7 +1261,7 @@
       micBtn.classList.remove('mic-pulse', 'bg-rose-600', 'hover:bg-rose-700');
       micBtn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
       micBtnText.textContent = 'マイクで答える';
-      micStatusText.textContent = '※ 話し終わると自動で判定するよ！';
+      micStatusText.textContent = '※ マイクを押して話すと自動で判定するよ！';
     }
 
     function evaluateSpokenResponse(transcript) {
@@ -1449,7 +1458,6 @@
       const rateToUse = forceSlow ? 0.55 : speechRate;
       speakText(q.en, rateToUse, () => {
         if (autoStartMicAfter && isAutoMicEnabled() && !isRecording) {
-          // 読み上げ直後の音声回り込み防止のため0.4秒待ってからマイクON
           autoMicDelayTimer = setTimeout(() => {
             if (!isRecording) {
               toggleSpeechRecognition(true);
