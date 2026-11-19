@@ -248,11 +248,11 @@
                 ① あいさつ
               </span>
               <div class="flex items-center gap-1.5">
-                <button onclick="speakCurrentQuestion(false, false)" class="bg-sky-600 hover:bg-sky-700 active:scale-95 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm transition flex items-center gap-1">
+                <button onclick="speakCurrentQuestion(false)" class="bg-sky-600 hover:bg-sky-700 active:scale-95 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm transition flex items-center gap-1">
                   <span>🔊</span>
                   <span>もう一度聞く</span>
                 </button>
-                <button onclick="speakCurrentQuestion(true, false)" class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm transition flex items-center gap-1">
+                <button onclick="speakCurrentQuestion(true)" class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm transition flex items-center gap-1">
                   <span>🐢</span>
                   <span>ゆっくり聞く</span>
                 </button>
@@ -291,7 +291,7 @@
 
         <div class="bg-indigo-50/60 rounded-2xl p-4 border border-indigo-100 flex flex-col items-center gap-3">
           <div class="flex flex-wrap items-center justify-center gap-3 w-full">
-            <button id="micBtn" onclick="toggleSpeechRecognition(false)" class="flex-1 min-w-[210px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-base sm:text-lg py-4 px-6 rounded-2xl shadow-md transition flex items-center justify-center gap-2.5 active:scale-95">
+            <button id="micBtn" onclick="toggleSpeechRecognition()" class="flex-1 min-w-[210px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-base sm:text-lg py-4 px-6 rounded-2xl shadow-md transition flex items-center justify-center gap-2.5 active:scale-95">
               <span id="micIcon" class="text-2xl">🎤</span>
               <span id="micBtnText">マイクで答える</span>
             </button>
@@ -304,12 +304,8 @@
 
           <div class="flex flex-wrap items-center justify-between gap-2 w-full px-1">
             <p id="micStatusText" class="text-xs font-bold text-slate-500">
-              ※ マイクを押して話すと自動で判定するよ！
+              ※ 先生の声が終わってからマイクを押してね
             </p>
-            <label class="inline-flex items-center gap-1.5 cursor-pointer bg-white border border-indigo-200 px-2.5 py-1 rounded-full text-[11px] font-extrabold text-indigo-700 shadow-xs select-none">
-              <input id="autoMicToggle" type="checkbox" onchange="onAutoMicToggleChange()" class="accent-indigo-600 w-3.5 h-3.5 rounded" />
-              <span>⚡ 質問のあと自動でマイクON</span>
-            </label>
           </div>
 
           <!-- 音声認識の結果表示ボックス -->
@@ -582,10 +578,11 @@
     let elapsedSeconds = 0;
     const ADVANCED_LIMIT_SECONDS = 45;
     let isRecording = false;
-    let recognition = null;
+    let sharedRecognition = null;
+    let currentTranscript = '';
+    let hasFinalizedCurrent = false;
     let silenceTimer = null;
     let noSpeechTimer = null;
-    let autoMicDelayTimer = null;
     let toastTimer = null;
     let speechSequenceToken = 0;
 
@@ -911,7 +908,7 @@
     }
 
     function renderCurrentQuestion(autoPlay) {
-      stopRecognition();
+      if (isRecording) stopRecognition();
       const q = currentQuestions[currentIndex];
       const total = currentQuestions.length;
 
@@ -968,7 +965,7 @@
       nextBtnText.textContent = (currentIndex === total - 1) ? '結果を見る 🎉' : 'つぎの質問へ';
 
       if (autoPlay) {
-        speakCurrentQuestion(false, isAutoMicEnabled());
+        speakCurrentQuestion(false);
       }
     }
 
@@ -1025,7 +1022,7 @@
 
     function goNextQuestion() {
       stopSpeech();
-      stopRecognition();
+      if (isRecording) stopRecognition();
       if (currentIndex < currentQuestions.length - 1) {
         currentIndex += 1;
         renderCurrentQuestion(true);
@@ -1036,7 +1033,7 @@
 
     function finishPractice() {
       stopTimer();
-      stopRecognition();
+      if (isRecording) stopRecognition();
       document.getElementById('practiceScreen').classList.add('hidden');
       document.getElementById('resultScreen').classList.remove('hidden');
 
@@ -1086,168 +1083,132 @@
     }
 
     // ==========================================
-    // 5. 音声認識（iPad Safari安定版：1問ごとに確実にリセット）
+    // 5. 音声認識（iPad Safari対応：単一インスタンス＆タップ直結起動）
     // ==========================================
-    let autoMicMode = false;
-
-    function isAutoMicEnabled() {
-      const el = document.getElementById('autoMicToggle');
-      return el ? el.checked : autoMicMode;
-    }
-
-    function onAutoMicToggleChange() {
-      autoMicMode = isAutoMicEnabled();
-      showToast(autoMicMode ? '⚡ 質問のあと自動でマイクがONになります' : 'マイクはボタンタップでONになります');
-    }
-
     function clearMicTimers() {
       if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
       if (noSpeechTimer) { clearTimeout(noSpeechTimer); noSpeechTimer = null; }
-      if (autoMicDelayTimer) { clearTimeout(autoMicDelayTimer); autoMicDelayTimer = null; }
     }
 
-    function toggleSpeechRecognition(isAutoTriggered = false) {
-      if (isRecording) {
-        if (recognition) {
-          try { recognition.stop(); } catch (e) {}
-        }
-        return;
-      }
-
+    function initSharedRecognition() {
+      if (sharedRecognition) return sharedRecognition;
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        if (!isAutoTriggered) {
-          showToast('このブラウザは音声認識に未対応です。「声に出して言えた！」を使ってね');
-        }
-        return;
-      }
+      if (!SpeechRecognition) return null;
 
-      stopSpeech();
-      stopRecognition();
+      const rec = new SpeechRecognition();
+      rec.lang = 'en-US';
+      rec.continuous = false;
+      rec.interimResults = true;
+      rec.maxAlternatives = 1;
 
-      const micBtnText = document.getElementById('micBtnText');
-      if (micBtnText) micBtnText.textContent = 'マイク準備中...';
-
-      // スピーカーからマイクへの切り替え時間を確保（iPad Safari対策）
-      autoMicDelayTimer = setTimeout(() => {
-        startRecognitionSession(SpeechRecognition, isAutoTriggered);
-      }, 250);
-    }
-
-    function startRecognitionSession(SpeechRecognition, isAutoTriggered) {
-      const micBtn = document.getElementById('micBtn');
-      const micBtnText = document.getElementById('micBtnText');
-      const micStatusText = document.getElementById('micStatusText');
-
-      recognition = new SpeechRecognition();
-      recognition.lang = 'en-US';
-      recognition.continuous = false;     // iPad Safariで2問目以降も安定させるためfalse
-      recognition.interimResults = true;
-      recognition.maxAlternatives = 1;
-
-      let fullTranscript = '';
-      let hasFinalized = false;
-
-      const finalizeAndStop = () => {
-        if (hasFinalized) return;
-        clearMicTimers();
-        const text = fullTranscript.trim();
-        if (text) {
-          hasFinalized = true;
-          evaluateSpokenResponse(text);
-        }
-        if (recognition) {
-          try { recognition.stop(); } catch (e) {}
-        }
-      };
-
-      recognition.onstart = () => {
+      rec.onstart = () => {
         isRecording = true;
-        micBtn.classList.add('mic-pulse', 'bg-rose-600', 'hover:bg-rose-700');
-        micBtn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
-        micBtnText.textContent = 'ききとり中... 話してね！';
-        micStatusText.textContent = '🎤 話し終わると自動で判定するよ！';
+        const micBtn = document.getElementById('micBtn');
+        const micBtnText = document.getElementById('micBtnText');
+        const micStatusText = document.getElementById('micStatusText');
+        if (micBtn) {
+          micBtn.classList.add('mic-pulse', 'bg-rose-600', 'hover:bg-rose-700');
+          micBtn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+        }
+        if (micBtnText) micBtnText.textContent = 'ききとり中... 話してね！';
+        if (micStatusText) micStatusText.textContent = '🎤 話し終わると自動で判定するよ！';
 
+        clearMicTimers();
         noSpeechTimer = setTimeout(() => {
-          if (isRecording && !fullTranscript.trim()) {
-            stopRecognition();
-            micStatusText.textContent = '※ 声が聞こえませんでした。もう一度マイクを押してね';
+          if (isRecording && !currentTranscript.trim()) {
+            try { rec.stop(); } catch (e) {}
+            const statusEl = document.getElementById('micStatusText');
+            if (statusEl) statusEl.textContent = '※ 声が聞こえませんでした。もう一度マイクを押してね';
           }
         }, 7000);
       };
 
-      recognition.onresult = (event) => {
+      rec.onresult = (event) => {
         if (noSpeechTimer) { clearTimeout(noSpeechTimer); noSpeechTimer = null; }
 
         let combined = '';
         for (let i = 0; i < event.results.length; i++) {
           combined += event.results[i][0].transcript + ' ';
         }
-        fullTranscript = combined.trim();
+        currentTranscript = combined.trim();
 
-        if (fullTranscript) {
-          micStatusText.textContent = `👂 "${fullTranscript}"`;
+        const micStatusText = document.getElementById('micStatusText');
+        if (currentTranscript && micStatusText) {
+          micStatusText.textContent = `👂 "${currentTranscript}"`;
+        }
+
+        if (currentTranscript) {
           if (silenceTimer) clearTimeout(silenceTimer);
           silenceTimer = setTimeout(() => {
-            finalizeAndStop();
-          }, 1800);
+            if (!hasFinalizedCurrent && currentTranscript.trim()) {
+              hasFinalizedCurrent = true;
+              evaluateSpokenResponse(currentTranscript.trim());
+            }
+            try { rec.stop(); } catch (e) {}
+          }, 1600);
         }
       };
 
-      recognition.onerror = (event) => {
+      rec.onerror = (event) => {
         clearMicTimers();
-        if (fullTranscript.trim() && !hasFinalized) {
-          hasFinalized = true;
-          evaluateSpokenResponse(fullTranscript.trim());
+        if (currentTranscript.trim() && !hasFinalizedCurrent) {
+          hasFinalizedCurrent = true;
+          evaluateSpokenResponse(currentTranscript.trim());
         } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-          if (!isAutoTriggered) {
-            showToast('マイクが許可されていません。Safariの設定を確認してね');
-          } else {
-            micStatusText.textContent = '🎤 マイクボタンを押してから英語を話してね！';
-          }
+          showToast('マイクが許可されていません。Safariの設定を確認してね');
         } else if (event.error !== 'aborted' && event.error !== 'no-speech') {
-          if (!isAutoTriggered) {
-            showToast('うまく聞き取れませんでした。もう一度マイクを押してね！');
-          }
+          showToast('うまく聞き取れませんでした。もう一度マイクを押してね！');
         }
         resetMicButtonUI();
       };
 
-      recognition.onend = () => {
+      rec.onend = () => {
         clearMicTimers();
-        if (fullTranscript.trim() && !hasFinalized) {
-          hasFinalized = true;
-          evaluateSpokenResponse(fullTranscript.trim());
+        if (currentTranscript.trim() && !hasFinalizedCurrent) {
+          hasFinalizedCurrent = true;
+          evaluateSpokenResponse(currentTranscript.trim());
         }
-        recognition = null;
         resetMicButtonUI();
       };
 
+      sharedRecognition = rec;
+      return sharedRecognition;
+    }
+
+    function toggleSpeechRecognition() {
+      const rec = initSharedRecognition();
+      if (!rec) {
+        showToast('このブラウザは音声認識に未対応です。「声に出して言えた！」を使ってね');
+        return;
+      }
+
+      if (isRecording) {
+        try { rec.stop(); } catch (e) {}
+        return;
+      }
+
+      // 先生が話している最中だけ止める（不要なcancelはiPadのオーディオを詰まらせるため呼ばない）
+      stopSpeech();
+
+      currentTranscript = '';
+      hasFinalizedCurrent = false;
+      clearMicTimers();
+
+      // タップイベント内で直接start()を呼ぶ（iPad Safari必須）
       try {
-        recognition.start();
+        rec.start();
       } catch (e) {
-        if (!isAutoTriggered) {
-          showToast('マイクを起動できませんでした。もう一度押してみてね！');
-        } else {
-          micStatusText.textContent = '🎤 マイクボタンを押してから英語を話してね！';
-        }
-        recognition = null;
+        // 前のセッションが終了処理中だった場合、一度stopしてから再試行を促す
+        try { rec.stop(); } catch (err) {}
         resetMicButtonUI();
+        showToast('もう一度マイクボタンを押してね！');
       }
     }
 
     function stopRecognition() {
       clearMicTimers();
-      if (recognition) {
-        const oldRec = recognition;
-        recognition = null;
-        try {
-          oldRec.onstart = null;
-          oldRec.onresult = null;
-          oldRec.onerror = null;
-          oldRec.onend = null;
-          oldRec.stop();
-        } catch (e) {}
+      if (sharedRecognition && isRecording) {
+        try { sharedRecognition.stop(); } catch (e) {}
       }
       resetMicButtonUI();
     }
@@ -1261,7 +1222,7 @@
       micBtn.classList.remove('mic-pulse', 'bg-rose-600', 'hover:bg-rose-700');
       micBtn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
       micBtnText.textContent = 'マイクで答える';
-      micStatusText.textContent = '※ マイクを押して話すと自動で判定するよ！';
+      micStatusText.textContent = '※ 先生の声が終わってからマイクを押してね';
     }
 
     function evaluateSpokenResponse(transcript) {
@@ -1336,7 +1297,7 @@
     }
 
     function markSelfSpoken() {
-      stopRecognition();
+      if (isRecording) stopRecognition();
       userLogs[currentIndex].spoken = true;
       if (!userLogs[currentIndex].transcript) {
         userLogs[currentIndex].transcript = '（声に出して練習OK！）';
@@ -1416,7 +1377,7 @@
     function replayActiveOrSampleSpeech() {
       const practiceVisible = !document.getElementById('practiceScreen').classList.contains('hidden');
       if (practiceVisible) {
-        speakCurrentQuestion(false, false);
+        speakCurrentQuestion(false);
       } else {
         speakText('Hello! Nice to meet you.');
       }
@@ -1448,42 +1409,35 @@
 
       const practiceVisible = !document.getElementById('practiceScreen').classList.contains('hidden');
       if (practiceVisible) {
-        speakCurrentQuestion(false, false);
+        speakCurrentQuestion(false);
       }
     }
 
-    function speakCurrentQuestion(forceSlow, autoStartMicAfter = false) {
+    function speakCurrentQuestion(forceSlow) {
       const q = currentQuestions[currentIndex];
       if (!q) return;
       const rateToUse = forceSlow ? 0.55 : speechRate;
-      speakText(q.en, rateToUse, () => {
-        if (autoStartMicAfter && isAutoMicEnabled() && !isRecording) {
-          autoMicDelayTimer = setTimeout(() => {
-            if (!isRecording) {
-              toggleSpeechRecognition(true);
-            }
-          }, 400);
-        }
-      });
+      speakText(q.en, rateToUse);
     }
 
     function stopSpeech() {
       speechSequenceToken += 1;
       if ('speechSynthesis' in window) {
         try {
-          window.speechSynthesis.cancel();
+          if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+            window.speechSynthesis.cancel();
+          }
         } catch (e) {}
       }
     }
 
-    function speakText(text, customRate, onCompleteCallback = null) {
+    function speakText(text, customRate) {
       if (!text) return;
       stopSpeech();
       const myToken = speechSequenceToken;
 
       if (!('speechSynthesis' in window)) {
         showToast('このブラウザは音声読み上げに対応していません');
-        if (onCompleteCallback) onCompleteCallback();
         return;
       }
 
@@ -1495,7 +1449,9 @@
       const chosenTeacher = availableEnglishVoices[selectedVoiceIndex] || { voice: null, lang: 'en-US', pitch: 1.0 };
 
       try {
-        window.speechSynthesis.resume();
+        if (window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
       } catch (e) {}
 
       const sentences = text.match(/[^.!?]+[.!?]*/g) || [text];
@@ -1503,10 +1459,7 @@
 
       function speakNextSentence() {
         if (myToken !== speechSequenceToken) return;
-        if (idx >= sentences.length) {
-          if (onCompleteCallback) onCompleteCallback();
-          return;
-        }
+        if (idx >= sentences.length) return;
 
         const part = sentences[idx].trim();
         idx += 1;
@@ -1528,8 +1481,6 @@
           if (myToken !== speechSequenceToken) return;
           if (idx < sentences.length) {
             setTimeout(speakNextSentence, 120);
-          } else if (onCompleteCallback) {
-            onCompleteCallback();
           }
         };
 
