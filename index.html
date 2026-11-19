@@ -578,11 +578,7 @@
     let elapsedSeconds = 0;
     const ADVANCED_LIMIT_SECONDS = 45;
     let isRecording = false;
-    let sharedRecognition = null;
-    let currentTranscript = '';
-    let hasFinalizedCurrent = false;
-    let silenceTimer = null;
-    let noSpeechTimer = null;
+    let recognition = null;
     let toastTimer = null;
     let speechSequenceToken = 0;
 
@@ -908,7 +904,7 @@
     }
 
     function renderCurrentQuestion(autoPlay) {
-      if (isRecording) stopRecognition();
+      stopRecognition();
       const q = currentQuestions[currentIndex];
       const total = currentQuestions.length;
 
@@ -1022,7 +1018,7 @@
 
     function goNextQuestion() {
       stopSpeech();
-      if (isRecording) stopRecognition();
+      stopRecognition();
       if (currentIndex < currentQuestions.length - 1) {
         currentIndex += 1;
         renderCurrentQuestion(true);
@@ -1033,7 +1029,7 @@
 
     function finishPractice() {
       stopTimer();
-      if (isRecording) stopRecognition();
+      stopRecognition();
       document.getElementById('practiceScreen').classList.add('hidden');
       document.getElementById('resultScreen').classList.remove('hidden');
 
@@ -1083,137 +1079,97 @@
     }
 
     // ==========================================
-    // 5. 音声認識（iPad Safari対応：単一インスタンス＆タップ直結起動）
+    // 5. 音声認識（シンプル版：毎回新規作成＆iPad標準動作）
     // ==========================================
-    function clearMicTimers() {
-      if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
-      if (noSpeechTimer) { clearTimeout(noSpeechTimer); noSpeechTimer = null; }
-    }
-
-    function initSharedRecognition() {
-      if (sharedRecognition) return sharedRecognition;
+    function toggleSpeechRecognition() {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) return null;
+      if (!SpeechRecognition) {
+        showToast('このブラウザは音声認識に未対応です。「声に出して言えた！」を使ってね');
+        return;
+      }
+
+      if (isRecording && recognition) {
+        try { recognition.stop(); } catch (e) {}
+        return;
+      }
+
+      stopSpeech();
 
       const rec = new SpeechRecognition();
       rec.lang = 'en-US';
       rec.continuous = false;
       rec.interimResults = true;
       rec.maxAlternatives = 1;
+      recognition = rec;
+
+      let latestText = '';
+      let finalized = false;
+
+      const micBtn = document.getElementById('micBtn');
+      const micBtnText = document.getElementById('micBtnText');
+      const micStatusText = document.getElementById('micStatusText');
 
       rec.onstart = () => {
         isRecording = true;
-        const micBtn = document.getElementById('micBtn');
-        const micBtnText = document.getElementById('micBtnText');
-        const micStatusText = document.getElementById('micStatusText');
-        if (micBtn) {
-          micBtn.classList.add('mic-pulse', 'bg-rose-600', 'hover:bg-rose-700');
-          micBtn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
-        }
-        if (micBtnText) micBtnText.textContent = 'ききとり中... 話してね！';
-        if (micStatusText) micStatusText.textContent = '🎤 話し終わると自動で判定するよ！';
-
-        clearMicTimers();
-        noSpeechTimer = setTimeout(() => {
-          if (isRecording && !currentTranscript.trim()) {
-            try { rec.stop(); } catch (e) {}
-            const statusEl = document.getElementById('micStatusText');
-            if (statusEl) statusEl.textContent = '※ 声が聞こえませんでした。もう一度マイクを押してね';
-          }
-        }, 7000);
+        micBtn.classList.add('mic-pulse', 'bg-rose-600', 'hover:bg-rose-700');
+        micBtn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+        micBtnText.textContent = 'ききとり中... 話してね！';
+        micStatusText.textContent = '🎤 話し終わったら自動で判定するよ（もう一度押しても終了）';
       };
 
       rec.onresult = (event) => {
-        if (noSpeechTimer) { clearTimeout(noSpeechTimer); noSpeechTimer = null; }
-
         let combined = '';
         for (let i = 0; i < event.results.length; i++) {
           combined += event.results[i][0].transcript + ' ';
         }
-        currentTranscript = combined.trim();
-
-        const micStatusText = document.getElementById('micStatusText');
-        if (currentTranscript && micStatusText) {
-          micStatusText.textContent = `👂 "${currentTranscript}"`;
-        }
-
-        if (currentTranscript) {
-          if (silenceTimer) clearTimeout(silenceTimer);
-          silenceTimer = setTimeout(() => {
-            if (!hasFinalizedCurrent && currentTranscript.trim()) {
-              hasFinalizedCurrent = true;
-              evaluateSpokenResponse(currentTranscript.trim());
-            }
-            try { rec.stop(); } catch (e) {}
-          }, 1600);
+        latestText = combined.trim();
+        if (latestText) {
+          micStatusText.textContent = `👂 "${latestText}"`;
         }
       };
 
       rec.onerror = (event) => {
-        clearMicTimers();
-        if (currentTranscript.trim() && !hasFinalizedCurrent) {
-          hasFinalizedCurrent = true;
-          evaluateSpokenResponse(currentTranscript.trim());
+        if (latestText && !finalized) {
+          finalized = true;
+          evaluateSpokenResponse(latestText);
         } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-          showToast('マイクが許可されていません。Safariの設定を確認してね');
-        } else if (event.error !== 'aborted' && event.error !== 'no-speech') {
-          showToast('うまく聞き取れませんでした。もう一度マイクを押してね！');
+          micStatusText.textContent = '⚠️ マイクが許可されていません（Safari設定を確認）';
+        } else if (event.error === 'no-speech') {
+          micStatusText.textContent = '※ 声が聞こえませんでした。もう一度押して話してね';
+        } else if (event.error !== 'aborted') {
+          micStatusText.textContent = `※ 聞き取りエラー(${event.error})。もう一度押してね`;
         }
-        resetMicButtonUI();
+        resetMicButtonUI(false);
       };
 
       rec.onend = () => {
-        clearMicTimers();
-        if (currentTranscript.trim() && !hasFinalizedCurrent) {
-          hasFinalizedCurrent = true;
-          evaluateSpokenResponse(currentTranscript.trim());
+        if (latestText && !finalized) {
+          finalized = true;
+          evaluateSpokenResponse(latestText);
         }
-        resetMicButtonUI();
+        recognition = null;
+        resetMicButtonUI(true);
       };
 
-      sharedRecognition = rec;
-      return sharedRecognition;
-    }
-
-    function toggleSpeechRecognition() {
-      const rec = initSharedRecognition();
-      if (!rec) {
-        showToast('このブラウザは音声認識に未対応です。「声に出して言えた！」を使ってね');
-        return;
-      }
-
-      if (isRecording) {
-        try { rec.stop(); } catch (e) {}
-        return;
-      }
-
-      // 先生が話している最中だけ止める（不要なcancelはiPadのオーディオを詰まらせるため呼ばない）
-      stopSpeech();
-
-      currentTranscript = '';
-      hasFinalizedCurrent = false;
-      clearMicTimers();
-
-      // タップイベント内で直接start()を呼ぶ（iPad Safari必須）
       try {
         rec.start();
       } catch (e) {
-        // 前のセッションが終了処理中だった場合、一度stopしてから再試行を促す
-        try { rec.stop(); } catch (err) {}
-        resetMicButtonUI();
-        showToast('もう一度マイクボタンを押してね！');
+        recognition = null;
+        resetMicButtonUI(true);
+        showToast('もう一度マイクを押してね！');
       }
     }
 
     function stopRecognition() {
-      clearMicTimers();
-      if (sharedRecognition && isRecording) {
-        try { sharedRecognition.stop(); } catch (e) {}
+      if (recognition) {
+        const old = recognition;
+        recognition = null;
+        try { old.stop(); } catch (e) {}
       }
-      resetMicButtonUI();
+      resetMicButtonUI(true);
     }
 
-    function resetMicButtonUI() {
+    function resetMicButtonUI(resetText) {
       isRecording = false;
       const micBtn = document.getElementById('micBtn');
       const micBtnText = document.getElementById('micBtnText');
@@ -1222,7 +1178,9 @@
       micBtn.classList.remove('mic-pulse', 'bg-rose-600', 'hover:bg-rose-700');
       micBtn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
       micBtnText.textContent = 'マイクで答える';
-      micStatusText.textContent = '※ 先生の声が終わってからマイクを押してね';
+      if (resetText && micStatusText) {
+        micStatusText.textContent = '※ 先生の声が終わってからマイクを押してね';
+      }
     }
 
     function evaluateSpokenResponse(transcript) {
@@ -1297,7 +1255,7 @@
     }
 
     function markSelfSpoken() {
-      if (isRecording) stopRecognition();
+      stopRecognition();
       userLogs[currentIndex].spoken = true;
       if (!userLogs[currentIndex].transcript) {
         userLogs[currentIndex].transcript = '（声に出して練習OK！）';
