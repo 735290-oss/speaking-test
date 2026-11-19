@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>6年生 外国語科｜2学期 Speaking Test れんしゅうアプリ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'M PLUS Rounded 1c', sans-serif;
+      background-color: #fffdf5;
+      background-image: radial-gradient(#fde68a 1.6px, transparent 1.6px), radial-gradient(#bfdbfe 1.6px, #fffdf5 1.6px);
+      background-size: 36px 36px;
+      background-position: 0 0, 18px 18px;
+      color: #1e293b;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .font-en {
+      font-family: 'Nunito', 'M PLUS Rounded 1c', sans-serif;
+    }
+    @keyframes pulseRing {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 14px rgba(239, 68, 68, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    .mic-pulse {
+      animation: pulseRing 1.4s infinite;
+    }
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px) rotate(-2deg); }
+      50% { transform: translateY(-6px) rotate(2deg); }
+    }
+    .mascot-float {
+      animation: floatSlow 3.2s ease-in-out infinite;
+    }
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-card {
+      animation: fadeSlideUp 0.25s ease-out forwards;
+    }
+    .game-card-green {
+      box-shadow: 0 6px 0 #10b981;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    .game-card-green:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 0 #10b981;
+    }
+    .game-card-green:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #10b981;
+    }
+    .game-card-orange {
+      box-shadow: 0 6px 0 #f97316;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    .game-card-orange:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 0 #f97316;
+    }
+    .game-card-orange:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #f97316;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- ヘッダー -->
+  <header class="bg-white/95 backdrop-blur-md border-b border-amber-200/80 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-3xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="bg-sky-500 text-white text-xs font-extrabold px-2.5 py-1 rounded-lg tracking-wide shadow-sm">6年 外国語</span>
+        <h1 class="text-base sm:text-lg font-extrabold text-slate-800 tracking-tight">2学期 Speaking Test れんしゅう</h1>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- 先生の声選択 -->
+        <div class="flex items-center gap-1 bg-amber-50 border border-amber-200 rounded-xl px-2 py-1 text-xs font-bold text-slate-700">
+          <span>🧑‍🏫 先生:</span>
+          <select id="voiceSelect" onchange="onVoiceSelectChange()" class="bg-transparent text-slate-800 font-bold focus:outline-none max-w-[140px] sm:max-w-[175px] truncate cursor-pointer">
+            <option value="0">🇺🇸 Emma 先生</option>
+          </select>
+          <button onclick="replayActiveOrSampleSpeech()" title="いまの先生の声で再生" class="bg-sky-600 hover:bg-sky-700 text-white px-2 py-0.5 rounded-lg text-[11px] font-bold transition shadow-sm">
+            🔊
+          </button>
+        </div>
+
+        <!-- スピード3段階調整 -->
+        <div class="flex items-center bg-slate-100 rounded-xl p-0.5 border border-slate-200 text-xs font-bold">
+          <span class="px-1.5 text-slate-500 hidden sm:inline">速さ:</span>
+          <button id="speedNormalBtn" onclick="setSpeechRate(0.90)" class="px-2 py-1 rounded-lg bg-sky-600 text-white shadow-sm transition">
+            ふつう
+          </button>
+          <button id="speedSlowBtn" onclick="setSpeechRate(0.65)" class="px-2 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition">
+            ゆっくり
+          </button>
+          <button id="speedSuperSlowBtn" onclick="setSpeechRate(0.50)" class="px-2 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition">
+            もっとゆっくり
+          </button>
+        </div>
+
+        <!-- ポイント確認モーダルボタン -->
+        <button onclick="togglePointsModal(true)" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs font-bold px-3 py-1.5 rounded-xl border border-amber-300 transition flex items-center gap-1">
+          <span>♪ 8つのポイント</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- メインコンテンツ -->
+  <main class="flex-1 max-w-3xl w-full mx-auto px-4 py-5 flex flex-col justify-center">
+
+    <!-- ① スタート画面（モード選択） -->
+    <section id="startScreen" class="animate-card space-y-5">
+      <div class="relative overflow-hidden bg-gradient-to-br from-sky-500 via-blue-500 to-indigo-600 rounded-3xl p-5 sm:p-6 shadow-lg text-white border-4 border-white">
+        <div class="absolute -right-6 -top-6 w-28 h-28 bg-white/10 rounded-full pointer-events-none"></div>
+        <div class="relative flex items-center justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <div class="mascot-float w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-3xl flex items-center justify-center text-4xl sm:text-5xl shadow-md shrink-0">
+              🧑‍🏫
+            </div>
+            <div>
+              <span class="inline-block bg-amber-300 text-amber-950 text-xs font-extrabold px-2.5 py-0.5 rounded-full mb-1 shadow-sm">
+                1人45秒チャレンジ！
+              </span>
+              <h2 class="text-2xl sm:text-3xl font-extrabold font-en tracking-tight drop-shadow-sm">
+                Let's Speak English!
+              </h2>
+            </div>
+          </div>
+
+          <button onclick="speakText('Hello! How are you?')" class="bg-white hover:bg-amber-50 text-sky-700 font-extrabold text-xs sm:text-sm px-4 py-3 rounded-2xl shadow-md transition flex items-center gap-1.5 active:scale-95 shrink-0">
+            <span class="text-lg">🔊</span>
+            <span>Hello! をきく</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- モード選択ボタン -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <button onclick="startPractice('basic')" class="game-card-green group text-left bg-white border-2 border-emerald-400 rounded-3xl p-5 flex items-center justify-between gap-3">
+          <div class="space-y-1.5">
+            <span class="inline-block bg-emerald-100 text-emerald-800 text-xs font-extrabold px-2.5 py-0.5 rounded-full">
+              ⭐ ステップ 1
+            </span>
+            <h3 class="text-2xl font-extrabold text-slate-800">🌱 基本編</h3>
+            <p class="text-xs font-bold text-slate-500">プリントの順番どおりにれんしゅう</p>
+          </div>
+          <div class="w-12 h-12 rounded-2xl bg-emerald-500 group-hover:bg-emerald-600 text-white flex items-center justify-center text-xl font-extrabold shadow-sm shrink-0">
+            ▶
+          </div>
+        </button>
+
+        <button onclick="startPractice('advanced')" class="game-card-orange group text-left bg-white border-2 border-orange-400 rounded-3xl p-5 flex items-center justify-between gap-3">
+          <div class="space-y-1.5">
+            <span class="inline-block bg-orange-100 text-orange-800 text-xs font-extrabold px-2.5 py-0.5 rounded-full">
+              🔥 ステップ 2（45秒タイマー）
+            </span>
+            <h3 class="text-2xl font-extrabold text-slate-800">🔥 応用編</h3>
+            <p class="text-xs font-bold text-slate-500">ランダム質問＆カウントダウン！</p>
+          </div>
+          <div class="w-12 h-12 rounded-2xl bg-orange-500 group-hover:bg-orange-600 text-white flex items-center justify-center text-xl font-extrabold shadow-sm shrink-0">
+            ▶
+          </div>
+        </button>
+      </div>
+
+      <!-- 最高記録ボード -->
+      <div class="bg-white/95 rounded-3xl p-4 sm:p-5 border-2 border-amber-200 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm sm:text-base font-extrabold text-slate-800 flex items-center gap-1.5">
+            <span>🏆 わたしの最高記録</span>
+          </h3>
+          <button onclick="clearPracticeRecords()" class="text-[11px] font-bold text-slate-400 hover:text-rose-500 transition">
+            リセット
+          </button>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2.5">
+          <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-2.5 text-center">
+            <p class="text-[11px] font-extrabold text-emerald-700">🌱 基本編</p>
+            <p id="bestBasicDisplay" class="text-lg sm:text-xl font-extrabold text-slate-800 font-en">--秒</p>
+          </div>
+          <div class="bg-orange-50 border border-orange-200 rounded-2xl p-2.5 text-center">
+            <p class="text-[11px] font-extrabold text-orange-700">🔥 応用編</p>
+            <p id="bestAdvancedDisplay" class="text-lg sm:text-xl font-extrabold text-slate-800 font-en">--秒</p>
+          </div>
+          <div class="bg-sky-50 border border-sky-200 rounded-2xl p-2.5 text-center">
+            <p class="text-[11px] font-extrabold text-sky-700">✨ クリア回数</p>
+            <p id="totalCountDisplay" class="text-lg sm:text-xl font-extrabold text-slate-800 font-en">0回</p>
+          </div>
+        </div>
+
+        <details class="group">
+          <summary class="cursor-pointer text-xs font-bold text-slate-500 hover:text-slate-700 flex items-center gap-1 select-none">
+            <span>📝 さいきんのきろくを見る</span>
+          </summary>
+          <div id="recentHistoryList" class="mt-2 space-y-1.5 max-h-36 overflow-y-auto text-xs text-slate-500">
+            <p class="text-center py-2">まだ記録がありません。</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ② 練習画面 -->
+    <section id="practiceScreen" class="hidden space-y-4">
+      <div class="bg-white rounded-2xl px-4 py-3 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <button onclick="returnHome()" class="text-xs font-bold text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg transition">
+            ← もどる
+          </button>
+          <span id="modeBadge" class="text-xs font-extrabold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">
+            🌱 基本編
+          </span>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <span id="stepCounterText" class="text-xs font-extrabold text-slate-600 mr-1">1 / 6</span>
+          <div id="stepDots" class="flex items-center gap-1"></div>
+        </div>
+
+        <div id="timerBox" class="flex items-center gap-1.5 text-xs font-bold bg-slate-100 text-slate-700 px-3 py-1 rounded-full border border-slate-200 transition-colors">
+          <span>⏱️</span>
+          <span id="timerText" class="font-extrabold">0秒</span>
+          <span id="timerTargetLabel" class="text-slate-400">/ 45秒目安</span>
+        </div>
+      </div>
+
+      <!-- AETの質問カード -->
+      <div class="animate-card bg-white rounded-3xl p-5 border-2 border-sky-200 shadow-sm">
+        <div class="flex items-start gap-3.5">
+          <div class="shrink-0 flex flex-col items-center">
+            <div class="w-12 h-12 rounded-2xl bg-sky-100 border-2 border-sky-300 flex items-center justify-center text-2xl shadow-sm">
+              🧑‍🏫
+            </div>
+            <span class="text-[11px] font-extrabold text-sky-700 mt-1">AET (T)</span>
+          </div>
+
+          <div class="flex-1 space-y-2.5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span id="questionTopicBadge" class="text-xs font-bold bg-sky-50 text-sky-700 px-2.5 py-0.5 rounded-md border border-sky-200">
+                ① あいさつ
+              </span>
+              <div class="flex items-center gap-1.5">
+                <button onclick="speakCurrentQuestion(false, false)" class="bg-sky-600 hover:bg-sky-700 active:scale-95 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm transition flex items-center gap-1">
+                  <span>🔊</span>
+                  <span>もう一度聞く</span>
+                </button>
+                <button onclick="speakCurrentQuestion(true, false)" class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm transition flex items-center gap-1">
+                  <span>🐢</span>
+                  <span>ゆっくり聞く</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200/80">
+              <p id="aetQuestionEn" class="font-en text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-wide leading-snug">
+                Hello.
+              </p>
+              <p id="aetQuestionJa" class="hidden text-xs sm:text-sm font-bold text-slate-500 mt-1.5">
+                （日本語訳：こんにちは。）
+              </p>
+            </div>
+
+            <div class="flex items-center justify-end">
+              <button id="toggleJaBtn" onclick="toggleJapaneseTranslation()" class="text-xs font-bold text-slate-400 hover:text-sky-600 transition">
+                👁️ 日本語訳を表示する
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 児童の回答エリア -->
+      <div class="animate-card bg-white rounded-3xl p-5 border-2 border-indigo-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="bg-indigo-600 text-white text-xs font-extrabold px-2.5 py-1 rounded-lg">あなたの番 (S)</span>
+            <span class="text-sm font-bold text-slate-700">英語で答えてみよう！</span>
+          </div>
+          <span id="pointTag" class="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
+            ♪ ポイント 1
+          </span>
+        </div>
+
+        <div class="bg-indigo-50/60 rounded-2xl p-4 border border-indigo-100 flex flex-col items-center gap-3">
+          <div class="flex flex-wrap items-center justify-center gap-3 w-full">
+            <button id="micBtn" onclick="toggleSpeechRecognition(false)" class="flex-1 min-w-[210px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-base sm:text-lg py-4 px-6 rounded-2xl shadow-md transition flex items-center justify-center gap-2.5 active:scale-95">
+              <span id="micIcon" class="text-2xl">🎤</span>
+              <span id="micBtnText">マイクで答える</span>
+            </button>
+
+            <button id="selfSpokenBtn" onclick="markSelfSpoken()" class="bg-white hover:bg-emerald-50 text-emerald-700 border-2 border-emerald-400 font-extrabold text-xs sm:text-sm py-4 px-4 rounded-2xl shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95 shrink-0">
+              <span class="text-lg">🙆‍♂️</span>
+              <span>声に出して言えた！</span>
+            </button>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-2 w-full px-1">
+            <p id="micStatusText" class="text-xs font-bold text-slate-500">
+              ※ 話し終わると自動で判定するよ！
+            </p>
+            <label class="inline-flex items-center gap-1.5 cursor-pointer bg-white border border-indigo-200 px-2.5 py-1 rounded-full text-[11px] font-extrabold text-indigo-700 shadow-xs select-none">
+              <input id="autoMicToggle" type="checkbox" checked onchange="onAutoMicToggleChange()" class="accent-indigo-600 w-3.5 h-3.5 rounded" />
+              <span>⚡ 質問のあと自動でマイクON</span>
+            </label>
+          </div>
+
+          <!-- 音声認識の結果表示ボックス -->
+          <div id="recognitionResultBox" class="hidden w-full bg-white rounded-2xl p-3.5 border-2 border-indigo-200 text-left shadow-sm">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[11px] font-extrabold text-indigo-600">ききとった英語：</span>
+              <span id="feedbackBadge" class="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Great job!</span>
+            </div>
+            <p id="recognizedText" class="font-en text-lg font-extrabold text-slate-800 mt-1">""</p>
+            <p id="feedbackComment" class="text-xs font-bold text-slate-600 mt-1"></p>
+            <div id="pronunciationTipBox" class="hidden mt-2 pt-2 border-t border-slate-100 text-[11px] font-bold text-slate-500 flex items-center justify-between gap-2">
+              <span id="pronunciationTipText"></span>
+              <button onclick="speakBestSample()" class="shrink-0 bg-sky-100 hover:bg-sky-200 text-sky-800 px-2 py-0.5 rounded-md font-extrabold transition">
+                🔊 お手本をきく
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ヒント・回答見本トグルボタン -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <button id="toggleHintBtn" onclick="toggleSupportBox('hint')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold text-xs sm:text-sm py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5">
+            <span>💡</span>
+            <span id="toggleHintBtnLabel">ヒントを見る</span>
+          </button>
+          <button id="toggleSampleBtn" onclick="toggleSupportBox('sample')" class="bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 font-bold text-xs sm:text-sm py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5">
+            <span>🗣️</span>
+            <span id="toggleSampleBtnLabel">回答見本を見る</span>
+          </button>
+        </div>
+
+        <div id="hintBox" class="hidden bg-amber-50/90 border border-amber-200 rounded-2xl p-4 space-y-2">
+          <p class="text-xs font-extrabold text-amber-800 flex items-center gap-1">
+            <span>💡 答え方のヒント・使える単語</span>
+          </p>
+          <p id="hintDescription" class="text-xs sm:text-sm font-bold text-slate-700 leading-relaxed"></p>
+          <div id="hintKeywords" class="flex flex-wrap gap-1.5 pt-1"></div>
+        </div>
+
+        <div id="sampleBox" class="hidden bg-sky-50/90 border border-sky-200 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between gap-2">
+            <p class="text-xs font-extrabold text-sky-800">🗣️ 回答見本（タップで発音を聞けます）</p>
+            <button onclick="shuffleSampleAnswers()" class="text-xs font-bold bg-white hover:bg-sky-100 text-sky-700 border border-sky-300 px-2.5 py-1 rounded-lg transition">
+              🔄 別の答え方にする
+            </button>
+          </div>
+          <div id="sampleList" class="space-y-2"></div>
+        </div>
+
+        <div class="pt-2 flex justify-end">
+          <button id="nextBtn" onclick="goNextQuestion()" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-base py-3.5 px-8 rounded-2xl shadow-md transition flex items-center justify-center gap-2 active:scale-95">
+            <span id="nextBtnText">つぎの質問へ</span>
+            <span>➔</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ③ 結果・ふりかえり画面 -->
+    <section id="resultScreen" class="hidden animate-card space-y-5">
+      <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 text-center space-y-4">
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-amber-100 text-4xl shadow-inner">
+          🎉
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-800">Good job! れんしゅう完了！</h2>
+        <p id="resultSummaryText" class="text-sm sm:text-base font-bold text-slate-600">
+          6つのやり取りをすべてクリアしました！
+        </p>
+
+        <div id="newRecordBanner" class="hidden bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400 text-amber-950 font-extrabold text-sm sm:text-base py-2.5 px-4 rounded-2xl shadow-sm border border-amber-500/40">
+          👑 最高記録（ベストタイム）こうしん！おめでとう！
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-xl mx-auto pt-1">
+          <div class="bg-slate-50 rounded-2xl p-3.5 border border-slate-200">
+            <p class="text-xs font-bold text-slate-500">こんかいのタイム</p>
+            <p id="finalTimeText" class="text-2xl font-extrabold text-sky-600 mt-1">38秒</p>
+            <p id="timeAdviceText" class="text-[11px] font-bold text-emerald-600 mt-0.5">45秒以内クリア！</p>
+          </div>
+          <div class="bg-amber-50/80 rounded-2xl p-3.5 border border-amber-200">
+            <p class="text-xs font-bold text-amber-800">🏆 このモードの最高記録</p>
+            <p id="resultBestTimeText" class="text-2xl font-extrabold text-amber-700 mt-1">38秒</p>
+            <p id="resultBestLabel" class="text-[11px] font-bold text-amber-700 mt-0.5">ベストタイム</p>
+          </div>
+          <div class="bg-slate-50 rounded-2xl p-3.5 border border-slate-200">
+            <p class="text-xs font-bold text-slate-500">声に出した数</p>
+            <p id="spokenCountText" class="text-2xl font-extrabold text-indigo-600 mt-1">6 / 6</p>
+            <p id="spokenAdviceText" class="text-[11px] font-bold text-slate-500 mt-0.5">大きな声でバッチリ！</p>
+          </div>
+        </div>
+
+        <div class="text-left bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-2.5 mt-4">
+          <h3 class="text-xs font-extrabold text-slate-600">📝 今回の質問とあなたの記録</h3>
+          <div id="reviewList" class="space-y-2"></div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-center gap-3 pt-4">
+          <button onclick="restartSameMode()" class="bg-sky-600 hover:bg-sky-700 text-white font-extrabold py-3.5 px-6 rounded-2xl shadow-md transition active:scale-95">
+            🔄 違う質問でもう一度れんしゅう
+          </button>
+          <button onclick="returnHome()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold py-3.5 px-6 rounded-2xl transition active:scale-95">
+            🏠 モード選択にもどる
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- トースト通知 -->
+  <div id="toastBanner" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-slate-800/95 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-full shadow-lg pointer-events-none opacity-0 transition-opacity duration-200">
+  </div>
+
+  <!-- 8つのポイント確認モーダル -->
+  <div id="pointsModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-xl border border-slate-200 space-y-4 animate-card">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-lg font-extrabold text-slate-800 flex items-center gap-2">
+          <span>♪ Speaking Test 8つのポイント</span>
+        </h3>
+        <button onclick="togglePointsModal(false)" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center">
+          ✕
+        </button>
+      </div>
+      <ol class="space-y-2 text-sm font-bold text-slate-700">
+        <li class="flex items-start gap-2"><span class="bg-sky-100 text-sky-700 px-2 py-0.5 rounded-md text-xs font-extrabold">1</span><span>先生を見て、大きな声であいさつが出来ている。</span></li>
+        <li class="flex items-start gap-2"><span class="bg-sky-100 text-sky-700 px-2 py-0.5 rounded-md text-xs font-extrabold">2</span><span>その時の自分の気分について答えられる。</span></li>
+        <li class="flex items-start gap-2"><span class="bg-sky-100 text-sky-700 px-2 py-0.5 rounded-md text-xs font-extrabold">3</span><span>お手伝いをしているかを答えられる。</span></li>
+        <li class="flex items-start gap-2"><span class="bg-sky-100 text-sky-700 px-2 py-0.5 rounded-md text-xs font-extrabold">4</span><span>そのお手伝いをしている頻度を答えられる。</span></li>
+        <li class="flex items-start gap-2"><span class="bg-sky-100 text-sky-700 px-2 py-0.5 rounded-md text-xs font-extrabold">5</span><span>夏休みに行った場所を答えられる。</span></li>
+        <li class="flex items-start gap-2"><span class="bg-sky-100 text-sky-700 px-2 py-0.5 rounded-md text-xs font-extrabold">6</span><span>そこで何をしたかを答えられる。</span></li>
+        <li class="flex items-start gap-2"><span class="bg-sky-100 text-sky-700 px-2 py-0.5 rounded-md text-xs font-extrabold">7</span><span>それぞれの動物が何を食べるか正しく答えられる。</span></li>
+        <li class="flex items-start gap-2"><span class="bg-sky-100 text-sky-700 px-2 py-0.5 rounded-md text-xs font-extrabold">8</span><span>正しく返答できる。</span></li>
+      </ol>
+      <div class="pt-2 text-right">
+        <button onclick="togglePointsModal(false)" class="bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm px-5 py-2.5 rounded-xl transition">
+          とじる
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // 1. 教材データ（プリントの会話例＆8つのポイント準拠）
+    // ==========================================
+    const CHORES_DATA = [
+      {
+        phrase: 'cook dinner',
+        ja: '夕食を作る',
+        samples: [
+          { en: 'Yes, I do. I usually cook dinner.', ja: 'はい、します。ふだん夕食を作ります。' },
+          { en: 'Yes, I do. I sometimes cook dinner.', ja: 'はい、します。ときどき夕食を作ります。' },
+          { en: 'No, I don’t. I never cook dinner.', ja: 'いいえ、しません。ぜんぜん夕食を作りません。' },
+          { en: 'Yes, I do. I always cook dinner on Sundays.', ja: 'はい、します。日曜日はいつも夕食を作ります。' }
+        ]
+      },
+      {
+        phrase: 'clean your room',
+        ja: '部屋のそうじをする',
+        samples: [
+          { en: 'Yes, I do. I always clean my room.', ja: 'はい、します。いつも部屋をそうじします。' },
+          { en: 'Yes, I do. I sometimes clean my room.', ja: 'はい、します。ときどき部屋をそうじします。' },
+          { en: 'No, I don’t. I never clean my room.', ja: 'いいえ、しません。ぜんぜん部屋をそうじしません。' },
+          { en: 'Yes, I do. I usually clean my room.', ja: 'はい、します。ふだん部屋をそうじします。' }
+        ]
+      },
+      {
+        phrase: 'wash the dishes',
+        ja: 'お皿を洗う',
+        samples: [
+          { en: 'Yes, I do. I usually wash the dishes.', ja: 'はい、します。ふだんお皿を洗います。' },
+          { en: 'Yes, I do. I sometimes wash the dishes.', ja: 'はい、します。ときどきお皿を洗います。' },
+          { en: 'No, I don’t. I never wash the dishes.', ja: 'いいえ、しません。ぜんぜんお皿を洗いません。' }
+        ]
+      },
+      {
+        phrase: 'take out the garbage',
+        ja: 'ゴミ出しをする',
+        samples: [
+          { en: 'Yes, I do. I always take out the garbage.', ja: 'はい、します。いつもゴミ出しをします。' },
+          { en: 'Yes, I do. I sometimes take out the garbage.', ja: 'はい、します。ときどきゴミ出しをします。' },
+          { en: 'No, I don’t. I never take out the garbage.', ja: 'いいえ、しません。ぜんぜんゴミ出しをしません。' }
+        ]
+      },
+      {
+        phrase: 'walk the dog',
+        ja: '犬の散歩をする',
+        samples: [
+          { en: 'Yes, I do. I always walk the dog.', ja: 'はい、します。いつも犬の散歩をします。' },
+          { en: 'Yes, I do. I usually walk the dog.', ja: 'はい、します。ふだん犬の散歩をします。' },
+          { en: 'No, I don’t. I never walk the dog.', ja: 'いいえ、しません。犬の散歩はしません。' }
+        ]
+      }
+    ];
+
+    const SUMMER_QUESTIONS = [
+      { en: 'What did you do in summer?', ja: '夏休みに何をしましたか？' },
+      { en: 'Where did you go in summer?', ja: '夏休みにどこへ行きましたか？' },
+      { en: 'Tell me about your summer vacation.', ja: '夏休みのことを教えてください。' }
+    ];
+
+    const SUMMER_SAMPLES = [
+      { en: 'I went to Okinawa. I swam in the sea.', ja: '沖縄に行きました。海で泳ぎました。' },
+      { en: 'I went to Kyoto. I saw old temples.', ja: '京都に行きました。古いお寺を見ました。' },
+      { en: 'I went to Hokkaido. I ate delicious seafood.', ja: '北海道に行きました。おいしい魚介類を食べました。' },
+      { en: 'I went to my grandparents’ house. I enjoyed fireworks.', ja: '祖父母の家に行きました。花火を楽しみました。' },
+      { en: 'I went to the zoo. I saw pandas and lions.', ja: '動物園に行きました。パンダとライオンを見ました。' },
+      { en: 'I went to the beach. I ate shaved ice.', ja: '海に行きました。かき氷を食べました。' }
+    ];
+
+    const ANIMALS_DATA = [
+      {
+        animal: 'pandas',
+        ja: 'パンダ',
+        samples: [
+          { en: 'Pandas eat bamboo.', ja: 'パンダは竹（笹）を食べます。' },
+          { en: 'They eat bamboo and apples.', ja: 'パンダは竹とりんごを食べます。' }
+        ],
+        keywords: ['bamboo (竹・笹)', 'grass (草)', 'apples (りんご)']
+      },
+      {
+        animal: 'lions',
+        ja: 'ライオン',
+        samples: [
+          { en: 'Lions eat meat.', ja: 'ライオンは肉を食べます。' },
+          { en: 'They eat meat.', ja: 'ライオンは肉を食べます。' }
+        ],
+        keywords: ['meat (肉)']
+      },
+      {
+        animal: 'sea turtles',
+        ja: 'ウミガメ',
+        samples: [
+          { en: 'Sea turtles eat jellyfish.', ja: 'ウミガメはクラゲを食べます。' },
+          { en: 'They eat seaweed and jellyfish.', ja: 'ウミガメは海藻やクラゲを食べます。' }
+        ],
+        keywords: ['jellyfish (クラゲ)', 'seaweed (海藻)']
+      },
+      {
+        animal: 'giraffes',
+        ja: 'キリン',
+        samples: [
+          { en: 'Giraffes eat leaves.', ja: 'キリンは木の葉を食べます。' },
+          { en: 'They eat leaves from tall trees.', ja: 'キリンは高い木の葉を食べます。' }
+        ],
+        keywords: ['leaves (木の葉)', 'grass (草)']
+      },
+      {
+        animal: 'monkeys',
+        ja: 'サル',
+        samples: [
+          { en: 'Monkeys eat bananas.', ja: 'サルはバナナを食べます。' },
+          { en: 'They eat fruits and nuts.', ja: 'サルは果物や木の実を食べます。' }
+        ],
+        keywords: ['bananas (バナナ)', 'fruits (果物)', 'nuts (木の実)']
+      }
+    ];
+
+    // ==========================================
+    // 2. アプリ状態管理 & 記録データ
+    // ==========================================
+    let currentMode = 'basic';
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let userLogs = [];
+    let speechRate = 0.90;
+    let showJa = false;
+    let timerInterval = null;
+    let elapsedSeconds = 0;
+    const ADVANCED_LIMIT_SECONDS = 45;
+    let isRecording = false;
+    let recognition = null;
+    let silenceTimer = null;
+    let noSpeechTimer = null;
+    let autoMicDelayTimer = null;
+    let toastTimer = null;
+    let speechSequenceToken = 0;
+
+    const STORAGE_KEY = 'grade6_speaking_test_records_v1';
+
+    function loadRecords() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          return {
+            bestBasic: parsed.bestBasic ?? null,
+            bestAdvanced: parsed.bestAdvanced ?? null,
+            totalCount: parsed.totalCount ?? 0,
+            history: Array.isArray(parsed.history) ? parsed.history : []
+          };
+        }
+      } catch (e) {}
+      return { bestBasic: null, bestAdvanced: null, totalCount: 0, history: [] };
+    }
+
+    function saveRecordEntry(mode, seconds, spokenCount, totalCount) {
+      const records = loadRecords();
+      let isNewBest = false;
+
+      if (mode === 'basic') {
+        if (records.bestBasic === null || seconds < records.bestBasic) {
+          records.bestBasic = seconds;
+          isNewBest = true;
+        }
+      } else {
+        if (records.bestAdvanced === null || seconds < records.bestAdvanced) {
+          records.bestAdvanced = seconds;
+          isNewBest = true;
+        }
+      }
+
+      records.totalCount += 1;
+      const now = new Date();
+      const dateStr = `${now.getMonth() + 1}/${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+      records.history.unshift({
+        mode,
+        seconds,
+        spokenCount,
+        totalCount,
+        date: dateStr,
+        isNewBest
+      });
+      if (records.history.length > 20) {
+        records.history = records.history.slice(0, 20);
+      }
+
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+      } catch (e) {}
+
+      renderRecordsBoard();
+      return { isNewBest, bestTime: mode === 'basic' ? records.bestBasic : records.bestAdvanced };
+    }
+
+    function clearPracticeRecords() {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch (e) {}
+      renderRecordsBoard();
+      showToast('記録をリセットしました');
+    }
+
+    function renderRecordsBoard() {
+      const records = loadRecords();
+      const bestBasicEl = document.getElementById('bestBasicDisplay');
+      const bestAdvEl = document.getElementById('bestAdvancedDisplay');
+      const totalCountEl = document.getElementById('totalCountDisplay');
+      const historyListEl = document.getElementById('recentHistoryList');
+
+      if (!bestBasicEl) return;
+
+      bestBasicEl.textContent = records.bestBasic !== null ? `${records.bestBasic}秒` : '--秒';
+      bestAdvEl.textContent = records.bestAdvanced !== null ? `${records.bestAdvanced}秒` : '--秒';
+      totalCountEl.textContent = `${records.totalCount}回`;
+
+      if (records.history.length === 0) {
+        historyListEl.innerHTML = '<p class="text-center py-2">まだ記録がありません。</p>';
+        return;
+      }
+
+      historyListEl.innerHTML = records.history.map((item) => {
+        const badge = item.mode === 'basic'
+          ? '<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-extrabold">🌱 基本編</span>'
+          : '<span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-extrabold">🔥 応用編</span>';
+        const crown = item.isNewBest ? '<span class="text-amber-500 font-extrabold">👑</span>' : '';
+        return `
+          <div class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
+            <div class="flex items-center gap-2">
+              ${badge}
+              <span class="font-bold text-slate-700">${item.date}</span>
+            </div>
+            <div class="flex items-center gap-2 font-extrabold text-slate-800">
+              <span>${crown}${item.seconds}秒</span>
+              <span class="text-[11px] font-bold text-slate-400">(${item.spokenCount}/${item.totalCount})</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ==========================================
+    // 3. 質問セット生成（基本編・応用編）
+    // ==========================================
+    function pickRandom(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function generateQuestionSet(mode) {
+      const q1 = {
+        topic: '① あいさつ',
+        point: 'ポイント 1',
+        en: 'Hello.',
+        ja: 'こんにちは。',
+        hint: '先生の目を見て、元気よく明るい声であいさつしよう！名前のあとに「Nice to meet you.」などを続けてもOK！',
+        keywords: ['Hello!', 'Hi!', 'Good morning!', 'Good afternoon!'],
+        expectedKeywords: ['hello', 'hi', 'good morning', 'good afternoon', 'hey'],
+        samples: [
+          { en: 'Hello!', ja: 'こんにちは！' },
+          { en: 'Hi! Good morning.', ja: 'やあ！おはようございます。' },
+          { en: 'Hello! Nice to see you.', ja: 'こんにちは！お会いできてうれしいです。' }
+        ]
+      };
+
+      const q2 = {
+        topic: '② 今の気分',
+        point: 'ポイント 2',
+        en: 'How are you today?',
+        ja: '今日の気分（調子）はどうですか？',
+        hint: '「I’m 〜.」で今の気分を答えよう！余裕があれば「And you?」と聞き返すとさらにバッチリ！',
+        keywords: ['happy (うれしい)', 'good (よい)', 'great (最高)', 'fine (元気)', 'sleepy (ねむい)', 'hungry (おなかがすいた)'],
+        expectedKeywords: ['happy', 'good', 'great', 'fine', 'sleepy', 'hungry', 'tired', 'excited', 'ok', 'okay', 'wonderful'],
+        samples: [
+          { en: 'I’m happy.', ja: 'うれしい気分です。' },
+          { en: 'I’m good, thank you. And you?', ja: '元気です、ありがとう。先生はどうですか？' },
+          { en: 'I’m great!', ja: '最高に元気です！' },
+          { en: 'I’m a little sleepy.', ja: '少しねむいです。' }
+        ]
+      };
+
+      const chore = mode === 'basic' ? CHORES_DATA[0] : pickRandom(CHORES_DATA);
+      const q3 = {
+        topic: '③④ お手伝いと頻度',
+        point: 'ポイント 3・4',
+        en: `Do you ${chore.phrase}?`,
+        ja: `あなたは${chore.ja}（お手伝い）をしますか？`,
+        hint: '「Yes, I do. / No, I don’t.」のあとに、どれくらいするか（always / usually / sometimes / never）を1文つなげて答えよう！',
+        keywords: ['always (いつも)', 'usually (ふだん)', 'sometimes (ときどき)', 'never (ぜんぜん〜ない)'],
+        expectedKeywords: ['yes', 'no', 'always', 'usually', 'sometimes', 'never', 'cook', 'clean', 'wash', 'take', 'walk'],
+        samples: chore.samples
+      };
+
+      const summerQ = mode === 'basic' ? SUMMER_QUESTIONS[0] : pickRandom(SUMMER_QUESTIONS);
+      const shuffledSummerSamples = mode === 'basic' ? SUMMER_SAMPLES : shuffleArray(SUMMER_SAMPLES);
+      const q4 = {
+        topic: '⑤⑥ 夏休みの思い出',
+        point: 'ポイント 5・6',
+        en: summerQ.en,
+        ja: summerQ.ja,
+        hint: '「I went to 〜.（〜へ行きました）」と「I ate / saw / enjoyed / swam 〜.（〜しました）」の2文セットで答えよう！',
+        keywords: ['I went to 〜 (〜へ行った)', 'I ate 〜 (〜を食べた)', 'I saw 〜 (〜を見た)', 'I enjoyed 〜 (〜を楽しんだ)', 'I swam (泳いだ)'],
+        expectedKeywords: ['went', 'ate', 'saw', 'enjoyed', 'swam', 'played', 'visited', 'watched', 'summer', 'to'],
+        samples: shuffledSummerSamples
+      };
+
+      const animalObj = mode === 'basic' ? ANIMALS_DATA[0] : pickRandom(ANIMALS_DATA);
+      const q5 = {
+        topic: '⑦ 動物の食べ物',
+        point: 'ポイント 7',
+        en: `What do ${animalObj.animal} eat?`,
+        ja: `${animalObj.ja}は何を食べますか？`,
+        hint: `「${animalObj.animal} eat 〜.」または「They eat 〜.」の形で、${animalObj.ja}が食べるものを英語で答えよう！`,
+        keywords: animalObj.keywords,
+        expectedKeywords: ['eat', 'bamboo', 'meat', 'jellyfish', 'seaweed', 'leaves', 'bananas', 'fruits', 'grass', 'apples', 'nuts', 'they'],
+        samples: animalObj.samples
+      };
+
+      const closingOptions = [
+        {
+          en: 'Thank you. See you!',
+          ja: 'ありがとう。またね！',
+          samples: [
+            { en: 'Thank you. See you!', ja: 'ありがとうございます。またね！' },
+            { en: 'Thank you very much. Goodbye!', ja: 'どうもありがとうございました。さようなら！' }
+          ]
+        },
+        {
+          en: 'You did a great job! See you.',
+          ja: 'とてもよくできました！またね。',
+          samples: [
+            { en: 'Thank you! See you!', ja: 'ありがとうございます！またね！' },
+            { en: 'Thank you. Have a nice day!', ja: 'ありがとう。よい一日を！' }
+          ]
+        }
+      ];
+      const closing = mode === 'basic' ? closingOptions[0] : pickRandom(closingOptions);
+      const q6 = {
+        topic: '⑧ 終わりのあいさつ',
+        point: 'ポイント 8',
+        en: closing.en,
+        ja: closing.ja,
+        hint: '最後まで笑顔で「Thank you. See you!」と元気に返答しよう！',
+        keywords: ['Thank you.', 'See you!', 'Goodbye!'],
+        expectedKeywords: ['thank', 'thanks', 'see', 'you', 'bye', 'goodbye', 'nice'],
+        samples: closing.samples
+      };
+
+      if (mode === 'basic') {
+        return [q1, q2, q3, q4, q5, q6];
+      } else {
+        const middleQuestions = shuffleArray([q3, q4, q5]);
+        return [q1, q2, ...middleQuestions, q6];
+      }
+    }
+
+    // ==========================================
+    // 4. 画面遷移・練習進行
+    // ==========================================
+    function startPractice(mode) {
+      currentMode = mode;
+      currentQuestions = generateQuestionSet(mode);
+      currentIndex = 0;
+      userLogs = currentQuestions.map((q) => ({
+        questionEn: q.en,
+        topic: q.topic,
+        spoken: false,
+        transcript: '',
+        grade: ''
+      }));
+
+      document.getElementById('startScreen').classList.add('hidden');
+      document.getElementById('resultScreen').classList.add('hidden');
+      document.getElementById('practiceScreen').classList.remove('hidden');
+
+      const badge = document.getElementById('modeBadge');
+      const targetLabel = document.getElementById('timerTargetLabel');
+      if (mode === 'basic') {
+        badge.textContent = '🌱 基本編';
+        badge.className = 'text-xs font-extrabold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700';
+        targetLabel.textContent = '/ 45秒目安';
+      } else {
+        badge.textContent = '🔥 応用編（45秒タイマー）';
+        badge.className = 'text-xs font-extrabold px-2.5 py-1 rounded-full bg-orange-100 text-orange-700';
+        targetLabel.textContent = 'のこり時間';
+      }
+
+      startTimer();
+      renderCurrentQuestion(true);
+    }
+
+    function restartSameMode() {
+      startPractice(currentMode);
+    }
+
+    function returnHome() {
+      stopTimer();
+      stopSpeech();
+      stopRecognition();
+      document.getElementById('practiceScreen').classList.add('hidden');
+      document.getElementById('resultScreen').classList.add('hidden');
+      document.getElementById('startScreen').classList.remove('hidden');
+      renderRecordsBoard();
+    }
+
+    function startTimer() {
+      stopTimer();
+      elapsedSeconds = 0;
+      updateTimerUI();
+      timerInterval = setInterval(() => {
+        elapsedSeconds += 1;
+        updateTimerUI();
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    function updateTimerUI() {
+      const timerText = document.getElementById('timerText');
+      const timerBox = document.getElementById('timerBox');
+      if (!timerText || !timerBox) return;
+
+      if (currentMode === 'basic') {
+        timerText.textContent = `${elapsedSeconds}秒`;
+        timerBox.className = elapsedSeconds > 45
+          ? 'flex items-center gap-1.5 text-xs font-bold bg-amber-100 text-amber-800 px-3 py-1 rounded-full border border-amber-300'
+          : 'flex items-center gap-1.5 text-xs font-bold bg-slate-100 text-slate-700 px-3 py-1 rounded-full border border-slate-200';
+      } else {
+        const remaining = ADVANCED_LIMIT_SECONDS - elapsedSeconds;
+        if (remaining >= 0) {
+          timerText.textContent = `あと ${remaining}秒`;
+          if (remaining <= 10) {
+            timerBox.className = 'flex items-center gap-1.5 text-xs font-extrabold bg-rose-100 text-rose-700 px-3 py-1 rounded-full border border-rose-300 animate-pulse';
+          } else if (remaining <= 20) {
+            timerBox.className = 'flex items-center gap-1.5 text-xs font-bold bg-amber-100 text-amber-800 px-3 py-1 rounded-full border border-amber-300';
+          } else {
+            timerBox.className = 'flex items-center gap-1.5 text-xs font-bold bg-orange-50 text-orange-700 px-3 py-1 rounded-full border border-orange-200';
+          }
+        } else {
+          timerText.textContent = `オーバー +${Math.abs(remaining)}秒`;
+          timerBox.className = 'flex items-center gap-1.5 text-xs font-extrabold bg-rose-100 text-rose-700 px-3 py-1 rounded-full border border-rose-300';
+        }
+      }
+    }
+
+    function renderCurrentQuestion(autoPlay) {
+      stopRecognition();
+      const q = currentQuestions[currentIndex];
+      const total = currentQuestions.length;
+
+      document.getElementById('stepCounterText').textContent = `${currentIndex + 1} / ${total}`;
+      const dotsContainer = document.getElementById('stepDots');
+      dotsContainer.innerHTML = '';
+      for (let i = 0; i < total; i++) {
+        const dot = document.createElement('span');
+        if (i < currentIndex) {
+          dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500';
+        } else if (i === currentIndex) {
+          dot.className = 'w-3.5 h-2.5 rounded-full bg-sky-600';
+        } else {
+          dot.className = 'w-2.5 h-2.5 rounded-full bg-slate-200';
+        }
+        dotsContainer.appendChild(dot);
+      }
+
+      document.getElementById('questionTopicBadge').textContent = q.topic;
+      document.getElementById('pointTag').textContent = `♪ ${q.point}`;
+      document.getElementById('aetQuestionEn').textContent = q.en;
+
+      const jaEl = document.getElementById('aetQuestionJa');
+      jaEl.textContent = `（日本語訳：${q.ja}）`;
+      jaEl.classList.toggle('hidden', !showJa);
+
+      document.getElementById('hintDescription').textContent = q.hint;
+      const kwContainer = document.getElementById('hintKeywords');
+      kwContainer.innerHTML = q.keywords.map(k =>
+        `<span class="bg-white border border-amber-300 text-amber-900 text-xs font-bold px-2.5 py-1 rounded-lg">${k}</span>`
+      ).join('');
+
+      renderSampleList(q.samples);
+
+      document.getElementById('hintBox').classList.add('hidden');
+      document.getElementById('sampleBox').classList.add('hidden');
+      document.getElementById('toggleHintBtnLabel').textContent = 'ヒントを見る';
+      document.getElementById('toggleSampleBtnLabel').textContent = '回答見本を見る';
+
+      const resultBox = document.getElementById('recognitionResultBox');
+      const tipBox = document.getElementById('pronunciationTipBox');
+      if (tipBox) tipBox.classList.add('hidden');
+
+      if (userLogs[currentIndex].spoken) {
+        resultBox.classList.remove('hidden');
+        document.getElementById('recognizedText').textContent = userLogs[currentIndex].transcript || '（声に出して練習OK！）';
+        document.getElementById('feedbackBadge').textContent = userLogs[currentIndex].grade || 'Clear! ✨';
+        document.getElementById('feedbackComment').textContent = 'ばっちり声に出せました！つぎの質問へ進もう！';
+      } else {
+        resultBox.classList.add('hidden');
+      }
+
+      const nextBtnText = document.getElementById('nextBtnText');
+      nextBtnText.textContent = (currentIndex === total - 1) ? '結果を見る 🎉' : 'つぎの質問へ';
+
+      if (autoPlay) {
+        speakCurrentQuestion(false, isAutoMicEnabled());
+      }
+    }
+
+    function renderSampleList(samples) {
+      const container = document.getElementById('sampleList');
+      container.innerHTML = samples.map((s) => {
+        const escaped = s.en.replace(/'/g, "\\'");
+        return `
+          <button onclick="speakText('${escaped}')" class="w-full text-left bg-white hover:bg-sky-100/70 border border-sky-200 rounded-xl p-3 transition flex items-center justify-between gap-2 group">
+            <div>
+              <p class="font-en text-sm sm:text-base font-extrabold text-slate-800 group-hover:text-sky-700">${s.en}</p>
+              <p class="text-xs font-bold text-slate-500 mt-0.5">${s.ja}</p>
+            </div>
+            <span class="shrink-0 w-8 h-8 rounded-full bg-sky-100 group-hover:bg-sky-600 group-hover:text-white text-sky-700 flex items-center justify-center text-sm transition">
+              🔊
+            </span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function shuffleSampleAnswers() {
+      const q = currentQuestions[currentIndex];
+      if (!q || !q.samples) return;
+      q.samples = shuffleArray(q.samples);
+      renderSampleList(q.samples);
+      showToast('別の答え方パターンに切り替えました！');
+    }
+
+    function toggleSupportBox(type) {
+      const hintBox = document.getElementById('hintBox');
+      const sampleBox = document.getElementById('sampleBox');
+      const hintLabel = document.getElementById('toggleHintBtnLabel');
+      const sampleLabel = document.getElementById('toggleSampleBtnLabel');
+
+      if (type === 'hint') {
+        const isHidden = hintBox.classList.contains('hidden');
+        hintBox.classList.toggle('hidden', !isHidden);
+        hintLabel.textContent = isHidden ? 'ヒントをとじる' : 'ヒントを見る';
+      } else {
+        const isHidden = sampleBox.classList.contains('hidden');
+        sampleBox.classList.toggle('hidden', !isHidden);
+        sampleLabel.textContent = isHidden ? '回答見本をとじる' : '回答見本を見る';
+      }
+    }
+
+    function toggleJapaneseTranslation() {
+      showJa = !showJa;
+      const jaEl = document.getElementById('aetQuestionJa');
+      const btn = document.getElementById('toggleJaBtn');
+      jaEl.classList.toggle('hidden', !showJa);
+      btn.textContent = showJa ? '🙈 日本語訳をかくす' : '👁️ 日本語訳を表示する';
+    }
+
+    function goNextQuestion() {
+      stopSpeech();
+      stopRecognition();
+      if (currentIndex < currentQuestions.length - 1) {
+        currentIndex += 1;
+        renderCurrentQuestion(true);
+      } else {
+        finishPractice();
+      }
+    }
+
+    function finishPractice() {
+      stopTimer();
+      stopRecognition();
+      document.getElementById('practiceScreen').classList.add('hidden');
+      document.getElementById('resultScreen').classList.remove('hidden');
+
+      const spokenCount = userLogs.filter(l => l.spoken).length;
+      const total = currentQuestions.length;
+      const saved = saveRecordEntry(currentMode, elapsedSeconds, spokenCount, total);
+
+      document.getElementById('finalTimeText').textContent = `${elapsedSeconds}秒`;
+      document.getElementById('spokenCountText').textContent = `${spokenCount} / ${total}`;
+      document.getElementById('resultBestTimeText').textContent = `${saved.bestTime}秒`;
+      document.getElementById('resultBestLabel').textContent = currentMode === 'basic' ? '基本編ベスト' : '応用編ベスト';
+
+      const banner = document.getElementById('newRecordBanner');
+      if (saved.isNewBest) {
+        banner.classList.remove('hidden');
+      } else {
+        banner.classList.add('hidden');
+      }
+
+      const adviceEl = document.getElementById('timeAdviceText');
+      if (elapsedSeconds <= 45) {
+        adviceEl.textContent = '✨ 45秒以内クリア！本番バッチリ！';
+        adviceEl.className = 'text-[11px] font-bold text-emerald-600 mt-0.5';
+      } else {
+        adviceEl.textContent = '💡 つぎは45秒以内をめざそう！';
+        adviceEl.className = 'text-[11px] font-bold text-amber-600 mt-0.5';
+      }
+
+      const reviewList = document.getElementById('reviewList');
+      reviewList.innerHTML = userLogs.map((log, idx) => {
+        const statusBadge = log.spoken
+          ? `<span class="text-[11px] font-extrabold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">${log.grade || 'Clear!'}</span>`
+          : `<span class="text-[11px] font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">確認のみ</span>`;
+        return `
+          <div class="bg-white rounded-xl p-3 border border-slate-200 flex items-center justify-between gap-2">
+            <div>
+              <p class="text-[11px] font-bold text-slate-400">${log.topic}</p>
+              <p class="font-en text-sm font-extrabold text-slate-800">${idx + 1}. ${log.questionEn}</p>
+              ${log.transcript ? `<p class="text-xs font-bold text-indigo-600 mt-0.5">あなた：${log.transcript}</p>` : ''}
+            </div>
+            ${statusBadge}
+          </div>
+        `;
+      }).join('');
+
+      speakText('Great job! You did it!');
+    }
+
+    // ==========================================
+    // 5. 音声認識（無音検知で自動終了＆即判定）
+    // ==========================================
+    let autoMicMode = true;
+
+    function isAutoMicEnabled() {
+      const el = document.getElementById('autoMicToggle');
+      return el ? el.checked : autoMicMode;
+    }
+
+    function onAutoMicToggleChange() {
+      autoMicMode = isAutoMicEnabled();
+      showToast(autoMicMode ? '⚡ 質問のあと自動でマイクがONになります！' : 'マイクはボタンタップでONになります');
+    }
+
+    function clearMicTimers() {
+      if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
+      if (noSpeechTimer) { clearTimeout(noSpeechTimer); noSpeechTimer = null; }
+      if (autoMicDelayTimer) { clearTimeout(autoMicDelayTimer); autoMicDelayTimer = null; }
+    }
+
+    function toggleSpeechRecognition(isAutoTriggered = false) {
+      if (isRecording) {
+        // 録音中に押されたら、今の内容で即判定して終了
+        if (recognition) {
+          try { recognition.stop(); } catch (e) {}
+        }
+        return;
+      }
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        if (!isAutoTriggered) {
+          showToast('このブラウザは音声認識に未対応です。「声に出して言えた！」を使ってね');
+        }
+        return;
+      }
+
+      stopSpeech();
+      stopRecognition();
+
+      recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.continuous = true;      // 2文構成でも息継ぎで切れないようにする
+      recognition.interimResults = true;  // 途中経過もリアルタイム表示
+      recognition.maxAlternatives = 1;
+
+      let fullTranscript = '';
+      let hasFinalized = false;
+
+      const micBtn = document.getElementById('micBtn');
+      const micBtnText = document.getElementById('micBtnText');
+      const micStatusText = document.getElementById('micStatusText');
+
+      const finalizeAndStop = () => {
+        if (hasFinalized) return;
+        clearMicTimers();
+        const text = fullTranscript.trim();
+        if (text) {
+          hasFinalized = true;
+          evaluateSpokenResponse(text);
+        }
+        if (recognition) {
+          try { recognition.stop(); } catch (e) {}
+        }
+      };
+
+      recognition.onstart = () => {
+        isRecording = true;
+        micBtn.classList.add('mic-pulse', 'bg-rose-600', 'hover:bg-rose-700');
+        micBtn.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+        micBtnText.textContent = 'ききとり中... 話してね！';
+        micStatusText.textContent = '🎤 話し終わると自動で判定するよ！';
+
+        // 6秒間まったく声が聞こえなければ自動終了
+        noSpeechTimer = setTimeout(() => {
+          if (isRecording && !fullTranscript.trim()) {
+            stopRecognition();
+            micStatusText.textContent = '※ 声が聞こえませんでした。もう一度マイクを押してね';
+          }
+        }, 6000);
+      };
+
+      recognition.onresult = (event) => {
+        if (noSpeechTimer) { clearTimeout(noSpeechTimer); noSpeechTimer = null; }
+
+        let combined = '';
+        for (let i = 0; i < event.results.length; i++) {
+          combined += event.results[i][0].transcript + ' ';
+        }
+        fullTranscript = combined.trim();
+
+        if (fullTranscript) {
+          micStatusText.textContent = `👂 "${fullTranscript}"`;
+          // 最後の言葉から1.6秒間、次の言葉が来なければ話し終わりとみなして自動判定
+          if (silenceTimer) clearTimeout(silenceTimer);
+          silenceTimer = setTimeout(() => {
+            finalizeAndStop();
+          }, 1600);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        clearMicTimers();
+        if (fullTranscript.trim() && !hasFinalized) {
+          hasFinalized = true;
+          evaluateSpokenResponse(fullTranscript.trim());
+        } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+          if (!isAutoTriggered) {
+            showToast('マイクが許可されていません。Safariの設定を確認するか「声に出して言えた！」を使ってね');
+          } else {
+            micStatusText.textContent = '🎤 マイクボタンを押してから英語を話してね！';
+          }
+        } else if (event.error !== 'aborted' && event.error !== 'no-speech') {
+          if (!isAutoTriggered) {
+            showToast('うまく聞き取れませんでした。もう一度マイクを押してね！');
+          }
+        }
+        resetMicButtonUI();
+      };
+
+      recognition.onend = () => {
+        clearMicTimers();
+        if (fullTranscript.trim() && !hasFinalized) {
+          hasFinalized = true;
+          evaluateSpokenResponse(fullTranscript.trim());
+        }
+        resetMicButtonUI();
+      };
+
+      try {
+        recognition.start();
+      } catch (e) {
+        if (!isAutoTriggered) {
+          showToast('マイクを起動できませんでした。もう一度押してみてね！');
+        } else {
+          micStatusText.textContent = '🎤 マイクボタンを押してから英語を話してね！';
+        }
+        resetMicButtonUI();
+      }
+    }
+
+    function stopRecognition() {
+      clearMicTimers();
+      if (recognition) {
+        const oldRec = recognition;
+        recognition = null;
+        try {
+          oldRec.onstart = null;
+          oldRec.onresult = null;
+          oldRec.onerror = null;
+          oldRec.onend = null;
+          oldRec.stop(); // iPad Safariでの詰まり防止のためabortではなくstopを使用
+        } catch (e) {}
+      }
+      resetMicButtonUI();
+    }
+
+    function resetMicButtonUI() {
+      isRecording = false;
+      const micBtn = document.getElementById('micBtn');
+      const micBtnText = document.getElementById('micBtnText');
+      const micStatusText = document.getElementById('micStatusText');
+      if (!micBtn) return;
+      micBtn.classList.remove('mic-pulse', 'bg-rose-600', 'hover:bg-rose-700');
+      micBtn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+      micBtnText.textContent = 'マイクで答える';
+      micStatusText.textContent = '※ 話し終わると自動で判定するよ！';
+    }
+
+    function evaluateSpokenResponse(transcript) {
+      const q = currentQuestions[currentIndex];
+      const normalized = transcript.toLowerCase().replace(/[.,!?']/g, '');
+      const words = normalized.split(/\s+/).filter(Boolean);
+      const matchedKeywords = (q.expectedKeywords || []).filter(kw => normalized.includes(kw));
+
+      let grade = '';
+      let badgeClass = '';
+      let boxBorderClass = '';
+      let comment = '';
+      let tipText = '';
+
+      const isMultiSentenceTopic = q.topic.includes('お手伝い') || q.topic.includes('夏休み');
+
+      if (matchedKeywords.length >= 2 || (matchedKeywords.length >= 1 && (!isMultiSentenceTopic || words.length >= 5))) {
+        grade = 'Excellent! 👑';
+        badgeClass = 'bg-emerald-100 text-emerald-800 border border-emerald-300';
+        boxBorderClass = 'border-emerald-400 bg-emerald-50/30';
+        comment = 'すばらしい発音と文の組み立てです！そのまま本番も自信を持って言おう！';
+      } else if (matchedKeywords.length >= 1 || words.length >= 2) {
+        grade = 'Great job! 🌟';
+        badgeClass = 'bg-sky-100 text-sky-800 border border-sky-300';
+        boxBorderClass = 'border-sky-400 bg-sky-50/30';
+        comment = 'しっかり英語で答えられました！';
+        if (q.topic.includes('お手伝い')) {
+          tipText = '💡 always / usually / sometimes / never を入れると満点！';
+        } else if (q.topic.includes('夏休み')) {
+          tipText = '💡 「I went to 〜.」と「I ate / saw 〜.」の2文にすると満点！';
+        } else if (q.topic.includes('動物')) {
+          tipText = '💡 「〜 eat 〜.」の形で食べ物を言えると満点！';
+        }
+      } else {
+        grade = 'Nice try! 👍';
+        badgeClass = 'bg-amber-100 text-amber-800 border border-amber-300';
+        boxBorderClass = 'border-amber-300 bg-amber-50/30';
+        comment = '声に出せたのがナイス！お手本を聞いてもう一度チャレンジしてもOK！';
+        tipText = `💡 お手本：「${q.samples[0].en}」`;
+      }
+
+      userLogs[currentIndex].spoken = true;
+      userLogs[currentIndex].transcript = transcript;
+      userLogs[currentIndex].grade = grade;
+
+      const resultBox = document.getElementById('recognitionResultBox');
+      const badgeEl = document.getElementById('feedbackBadge');
+      const tipBox = document.getElementById('pronunciationTipBox');
+      const tipTextEl = document.getElementById('pronunciationTipText');
+
+      resultBox.className = `w-full rounded-2xl p-3.5 border-2 text-left shadow-sm transition-all ${boxBorderClass}`;
+      resultBox.classList.remove('hidden');
+
+      document.getElementById('recognizedText').textContent = `"${transcript}"`;
+      badgeEl.textContent = grade;
+      badgeEl.className = `text-xs font-extrabold px-2.5 py-0.5 rounded-full ${badgeClass}`;
+      document.getElementById('feedbackComment').textContent = comment;
+
+      if (tipText) {
+        tipTextEl.textContent = tipText;
+        tipBox.classList.remove('hidden');
+      } else {
+        tipBox.classList.add('hidden');
+      }
+    }
+
+    function speakBestSample() {
+      const q = currentQuestions[currentIndex];
+      if (q && q.samples && q.samples.length > 0) {
+        speakText(q.samples[0].en);
+      }
+    }
+
+    function markSelfSpoken() {
+      stopRecognition();
+      userLogs[currentIndex].spoken = true;
+      if (!userLogs[currentIndex].transcript) {
+        userLogs[currentIndex].transcript = '（声に出して練習OK！）';
+      }
+      userLogs[currentIndex].grade = 'Clear! ✨';
+
+      const resultBox = document.getElementById('recognitionResultBox');
+      resultBox.className = 'w-full bg-white rounded-2xl p-3.5 border-2 border-emerald-400 text-left shadow-sm';
+      resultBox.classList.remove('hidden');
+      document.getElementById('recognizedText').textContent = '🙆‍♂️ 声に出して言えました！';
+      document.getElementById('feedbackBadge').textContent = 'Clear! ✨';
+      document.getElementById('feedbackBadge').className = 'text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700';
+      document.getElementById('feedbackComment').textContent = 'いいね！「つぎの質問へ」を押してどんどん進もう！';
+      document.getElementById('pronunciationTipBox').classList.add('hidden');
+    }
+
+    // ==========================================
+    // 6. 先生の声選択・3段階スピード＆音声合成（自然な声3名厳選）
+    // ==========================================
+    let availableEnglishVoices = [];
+    let selectedVoiceIndex = 0;
+
+    const TEACHER_PRESETS = [
+      { label: '🇺🇸 Emma 先生', langMatch: 'en-US', preferredNames: ['samantha', 'ava', 'allison', 'google us english', 'aria', 'jenny', 'zira'], pitch: 1.02 },
+      { label: '🇬🇧 Daniel 先生', langMatch: 'en-GB', preferredNames: ['daniel', 'google uk english male', 'arthur', 'oliver', 'ryan'], pitch: 0.98 },
+      { label: '🇦🇺 Karen 先生', langMatch: 'en-AU', preferredNames: ['karen', 'catherine', 'gordon', 'google uk english female', 'serena'], pitch: 1.00 }
+    ];
+
+    const ROBOT_VOICE_BLACKLIST = ['fred', 'albert', 'bad news', 'bahh', 'bells', 'boing', 'bubbles', 'cellos', 'deranged', 'good news', 'hysterical', 'junior', 'kathy', 'organ', 'princess', 'ralph', 'superstar', 'trinoids', 'whisper', 'zarvox', 'novelty', 'espeak'];
+
+    function isNaturalVoice(v) {
+      if (!v || !v.lang || !v.lang.toLowerCase().startsWith('en')) return false;
+      const nameLower = v.name.toLowerCase();
+      return !ROBOT_VOICE_BLACKLIST.some(bad => nameLower.includes(bad));
+    }
+
+    function populateVoiceList() {
+      const select = document.getElementById('voiceSelect');
+      if (!select) return;
+
+      const rawVoices = ('speechSynthesis' in window) ? window.speechSynthesis.getVoices() : [];
+      const naturalEnVoices = rawVoices.filter(isNaturalVoice);
+
+      availableEnglishVoices = TEACHER_PRESETS.map((preset) => {
+        let matched = null;
+        for (const kw of preset.preferredNames) {
+          matched = naturalEnVoices.find(v => v.name.toLowerCase().includes(kw));
+          if (matched) break;
+        }
+        if (!matched) {
+          matched = naturalEnVoices.find(v => v.lang.toLowerCase().includes(preset.langMatch.toLowerCase()));
+        }
+        if (!matched && naturalEnVoices.length > 0) {
+          matched = naturalEnVoices[0];
+        }
+        return {
+          label: preset.label,
+          voice: matched || null,
+          lang: preset.langMatch,
+          pitch: preset.pitch
+        };
+      });
+
+      const prevIndex = selectedVoiceIndex;
+      select.innerHTML = availableEnglishVoices.map((t, idx) =>
+        `<option value="${idx}">${t.label}</option>`
+      ).join('');
+
+      selectedVoiceIndex = (prevIndex >= 0 && prevIndex < availableEnglishVoices.length) ? prevIndex : 0;
+      select.value = String(selectedVoiceIndex);
+    }
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = populateVoiceList;
+    }
+
+    function replayActiveOrSampleSpeech() {
+      const practiceVisible = !document.getElementById('practiceScreen').classList.contains('hidden');
+      if (practiceVisible) {
+        speakCurrentQuestion(false, false);
+      } else {
+        speakText('Hello! Nice to meet you.');
+      }
+    }
+
+    function onVoiceSelectChange() {
+      const select = document.getElementById('voiceSelect');
+      selectedVoiceIndex = parseInt(select.value, 10) || 0;
+      const chosen = availableEnglishVoices[selectedVoiceIndex];
+      showToast(`${chosen ? chosen.label : 'AET 先生'} に変更しました`);
+      replayActiveOrSampleSpeech();
+    }
+
+    function setSpeechRate(rate) {
+      speechRate = rate;
+      const btnNormal = document.getElementById('speedNormalBtn');
+      const btnSlow = document.getElementById('speedSlowBtn');
+      const btnSuperSlow = document.getElementById('speedSuperSlowBtn');
+
+      const inactiveClass = 'px-2 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition';
+      const activeClass = 'px-2 py-1 rounded-lg bg-sky-600 text-white shadow-sm transition';
+
+      btnNormal.className = rate === 0.90 ? activeClass : inactiveClass;
+      btnSlow.className = rate === 0.65 ? activeClass : inactiveClass;
+      btnSuperSlow.className = rate === 0.50 ? activeClass : inactiveClass;
+
+      const label = rate === 0.90 ? 'ふつう' : (rate === 0.65 ? 'ゆっくり' : 'もっとゆっくり');
+      showToast(`速さ：${label}`);
+
+      const practiceVisible = !document.getElementById('practiceScreen').classList.contains('hidden');
+      if (practiceVisible) {
+        speakCurrentQuestion(false, false);
+      }
+    }
+
+    function speakCurrentQuestion(forceSlow, autoStartMicAfter = false) {
+      const q = currentQuestions[currentIndex];
+      if (!q) return;
+      const rateToUse = forceSlow ? 0.55 : speechRate;
+      speakText(q.en, rateToUse, () => {
+        if (autoStartMicAfter && isAutoMicEnabled() && !isRecording) {
+          // 読み上げ直後の音声回り込み防止のため0.4秒待ってからマイクON
+          autoMicDelayTimer = setTimeout(() => {
+            if (!isRecording) {
+              toggleSpeechRecognition(true);
+            }
+          }, 400);
+        }
+      });
+    }
+
+    function stopSpeech() {
+      speechSequenceToken += 1;
+      if ('speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.cancel();
+        } catch (e) {}
+      }
+    }
+
+    function speakText(text, customRate, onCompleteCallback = null) {
+      if (!text) return;
+      stopSpeech();
+      const myToken = speechSequenceToken;
+
+      if (!('speechSynthesis' in window)) {
+        showToast('このブラウザは音声読み上げに対応していません');
+        if (onCompleteCallback) onCompleteCallback();
+        return;
+      }
+
+      if (availableEnglishVoices.length === 0) {
+        populateVoiceList();
+      }
+
+      const rate = customRate || speechRate;
+      const chosenTeacher = availableEnglishVoices[selectedVoiceIndex] || { voice: null, lang: 'en-US', pitch: 1.0 };
+
+      try {
+        window.speechSynthesis.resume();
+      } catch (e) {}
+
+      const sentences = text.match(/[^.!?]+[.!?]*/g) || [text];
+      let idx = 0;
+
+      function speakNextSentence() {
+        if (myToken !== speechSequenceToken) return;
+        if (idx >= sentences.length) {
+          if (onCompleteCallback) onCompleteCallback();
+          return;
+        }
+
+        const part = sentences[idx].trim();
+        idx += 1;
+        if (!part) {
+          speakNextSentence();
+          return;
+        }
+
+        const utter = new SpeechSynthesisUtterance(part);
+        utter.lang = chosenTeacher.lang || 'en-US';
+        utter.rate = rate;
+        utter.pitch = chosenTeacher.pitch || 1.0;
+
+        if (chosenTeacher.voice) {
+          utter.voice = chosenTeacher.voice;
+        }
+
+        utter.onend = () => {
+          if (myToken !== speechSequenceToken) return;
+          if (idx < sentences.length) {
+            setTimeout(speakNextSentence, 120);
+          } else if (onCompleteCallback) {
+            onCompleteCallback();
+          }
+        };
+
+        utter.onerror = () => {
+          if (myToken !== speechSequenceToken) return;
+          speakNextSentence();
+        };
+
+        window.speechSynthesis.speak(utter);
+      }
+
+      speakNextSentence();
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toastBanner');
+      if (!toast) return;
+      toast.textContent = message;
+      toast.classList.remove('opacity-0');
+      toast.classList.add('opacity-100');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0');
+      }, 2200);
+    }
+
+    function togglePointsModal(show) {
+      const modal = document.getElementById('pointsModal');
+      if (!modal) return;
+      modal.classList.toggle('hidden', !show);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      populateVoiceList();
+      renderRecordsBoard();
+    });
+  </script>
+</body>
+</html>
